@@ -1,2 +1,2 @@
-# data_824_data_viz_and_acquisition
+# DATA 824: Data Visualization and Acquisition
 Summer 2022 semester, KUMC Applied Statistics online program.
