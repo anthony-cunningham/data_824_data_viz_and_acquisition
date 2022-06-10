@@ -1,0 +1,99 @@
+---
+title: "Assignment 2"
+author: "Anthony Cunningham"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Change working dir in RMarkdown cell
+knitr::opts_knit$set(root.dir = 
+'C:/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition/2_data_wrangling'
+)
+
+library(hflights)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(ggplot2)
+
+df <- hflights
+```
+
+___
+
+## Exercise 1
+
+```{r}
+total_flights <- nrow(df)
+
+t11 <- df %>%
+    mutate(Cancelled = if_else(Cancelled == "1", TRUE, FALSE, missing = FALSE)) %>%
+    group_by(Cancelled) %>%
+    summarise(
+        n_flights = n(),
+        perc_flights = round(100 * (n() / total_flights), 2),
+    ) %>%
+    arrange(desc(Cancelled))
+
+t11
+```
+
+```{r}
+carriers <- df %>%
+    group_by(UniqueCarrier) %>%
+    summarise(n_flights = n()) %>%
+    arrange(UniqueCarrier)
+
+t12 <- df %>%
+    mutate(Cancelled = as.character(Cancelled)) %>%
+    mutate(Cancelled = if_else(Cancelled == "1", "Cancelled", "Not Cancelled", missing = "Not Cancelled")) %>%
+    left_join(carriers, by = "UniqueCarrier") %>%
+    group_by(UniqueCarrier, Cancelled) %>%
+    summarise(perc_flights = round(100 * (n() / n_flights), 2)) %>%
+    arrange(UniqueCarrier, Cancelled) %>%
+    distinct() %>%
+    pivot_wider(names_from = Cancelled, values_from = perc_flights) %>%
+    arrange(desc(Cancelled))
+
+t12
+```
+
+```{r}
+t13 <- df %>%
+    mutate(Cancelled = as.character(Cancelled)) %>%
+    mutate(Cancelled = if_else(Cancelled == "1", "Cancelled", "Not Cancelled", missing = "Not Cancelled")) %>%
+    filter(Cancelled == "Cancelled") %>%
+    group_by(UniqueCarrier, CancellationCode) %>%
+    summarise(n_flights = n()) %>%
+    pivot_wider(names_from = CancellationCode, values_from = n_flights) %>%
+    arrange(UniqueCarrier)
+
+t13
+```
+
+___
+
+## Exercise 2
+
+```{r}
+t21 <- df %>%
+    mutate(
+        Month = str_pad(Month, width = 2, side = "left", pad = "0"),
+        DayofMonth = str_pad(DayofMonth, width = 2, side = "left", pad = "0")
+        ) %>%
+    unite("Date", Year, Month, DayofMonth, sep = "-") %>%
+    mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
+    group_by(Date, Origin) %>%
+    summarise(n_flights = n()) %>%
+    arrange(Date, Origin)
+
+print("Only first 20 rows are printed out.")
+paste0("Total size of table is: ", nrow(t21), " rows by ", ncol(t21), " columns")
+head(t21, 20)
+```
+
+___
+___
+___
