@@ -1,0 +1,161 @@
+---
+title: "Assignment 1"
+author: "Anthony Cunningham"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Change working dir in RMarkdown cell
+knitr::opts_knit$set(root.dir = 
+'C:/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition/1_intro_to_ggplot2'
+)
+
+library(dplyr)
+library(ggplot2)
+
+# assign cars fuel economy data to data frame
+df <- ggplot2::mpg
+```
+
+___
+
+## Exercise 1
+
+```{r}
+fig <- ggplot(data = df, mapping = aes(x = displ, y = hwy)) +
+  geom_point(size = 8, alpha = 1/5, position = "jitter", color = "red") +
+  xlab("Engine displacement (volume in litres)") +
+  ylab("Highway miles per gallon (MPG)") +
+  ggtitle("Car fuel consumption") +
+  theme(axis.text = element_text(size = 16),
+        axis.title = element_text(size = 20),
+        axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        plot.title = element_text(size = 30, face = "bold", hjust = 0.5,
+                                  margin = margin(t = 0, r = 0, b = 20, l = 0)),
+        )
+
+print(fig) # print plot
+```
+
+```{r}
+ggsave(
+    filename = "images/01_assignment_fig1.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+___
+
+## Exercise 2
+
+```{r}
+# create new variable transmission from variable trans
+df <- df %>%
+    mutate(transmission = substr(trans, 1, 1)) %>%
+    mutate(transmission = case_when(
+        transmission == "a" ~ "automatic trans.",
+        transmission == "m" ~ "manual trans.")
+        ) %>%
+    mutate(transmission = factor(transmission, levels = c("manual trans.", "automatic trans.")))
+```
+
+```{r}
+fig <- ggplot(data = df, mapping = aes(x = displ, y = hwy, color = transmission)) +
+  geom_point(size = 8, alpha = 1/5, position = "jitter") +
+  xlab("Engine displacement (volume in litres)") +
+  ylab("Highway miles per gallon (MPG)") +
+  ggtitle("Car fuel consumption") +
+  theme(axis.text = element_text(size = 16),
+        axis.title = element_text(size = 20),
+        axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        plot.title = element_text(size = 30, face = "bold", hjust = 0.5,
+                                  margin = margin(t = 0, r = 0, b = 20, l = 0)),
+        )
+
+print(fig) # print plot
+```
+
+```{r}
+ggsave(
+    filename = "images/01_assignment_fig2.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+___
+
+## Exercise 3
+
+```{r}
+fig <- ggplot(data = df, mapping = aes(x = cyl, y = hwy)) +
+  geom_point(size = 7, alpha = 1/3, position = "jitter", color = "red") +
+  xlab("Number of cylinders") +
+  ylab("Highway miles per gallon (MPG)") +
+  ggtitle("Car fuel consumption") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 16),
+        axis.title = element_text(size = 20),
+        axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        plot.title = element_text(size = 30, face = "bold", hjust = 0.5,
+                                  margin = margin(t = 0, r = 0, b = 20, l = 0)),
+        )
+
+print(fig) # print plot
+```
+
+```{r}
+ggsave(
+    filename = "images/01_assignment_fig3.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+___
+
+## Exercise 4
+
+```{r}
+fig <- ggplot(data = df, mapping = aes(x = class, y = hwy)) +
+  geom_point(size = 7, alpha = 1/3, position = "nudge", color = "red") +
+  xlab("Car Type") +
+  ylab("Highway miles per gallon (MPG)") +
+  ggtitle("Car fuel consumption") +
+  theme_minimal() +
+  theme(axis.text = element_text(size = 16),
+        axis.title = element_text(size = 20),
+        axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        plot.title = element_text(size = 30, face = "bold", hjust = 0.5,
+                                  margin = margin(t = 0, r = 0, b = 20, l = 0)),
+        )
+
+print(fig) # print plot
+```
+
+```{r}
+ggsave(
+    filename = "images/01_assignment_fig4.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+___
+___
+___
