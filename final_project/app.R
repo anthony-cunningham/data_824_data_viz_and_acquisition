@@ -10,130 +10,14 @@
 #
 #   https://cran.r-project.org/web/packages/dplyr/vignettes/programming.html
 
-# library(shiny)
-# library(plotly)
-# library(readr)
-# library(ggplot2)
-# library(tidyverse)
-# 
-# # Load data
-# life <- read_csv("../datasets/life_expectancy_clean.csv")
-# 
-# life %>%
-#     group_by(year) %>%
-#     summarise(
-#         mean_life_expectancy = mean(life_expectancy, na.rm = TRUE),
-#         median_life_expectancy = median(life_expectancy, na.rm = TRUE)
-#         )
-# 
-# get_aggs_by_year <- function(data, var, grouping_var){
-#     if(missing(grouping_var)){
-#         agg <- data %>%
-#             group_by(year) %>%
-#             summarise(
-#                 mean = mean({{ var }}, na.rm = TRUE),
-#                 median = median({{ var }}, na.rm = TRUE)
-#             )
-#     }
-#     else{
-#         agg <- data %>%
-#             group_by(year, {{ grouping_var }}) %>%
-#             summarise(
-#                 mean = mean({{ var }}, na.rm = TRUE),
-#                 median = median({{ var }}, na.rm = TRUE)
-#             )
-#     }
-#     
-#     return(agg)
-# }
-# 
-# life %>% get_aggs_by_year(var = life_expectancy, grouping_var = continent)
-# 
-# # Plot life expectancy across time
-# data_p <- life %>% ggplot(aes(x=year, y=life_expectancy, color=country)) +
-#     geom_line(alpha = 0.3) + 
-#     geom_point(alpha = 0.3) +
-#     scale_colour_manual(values = rep(c("#749AAC"), times = length(unique(life$country)))) +
-#     scale_x_continuous(n.breaks = length(unique(life$year))) +
-#     theme(
-#         legend.position="none",
-#         axis.text.x  = element_text(angle=45)
-#         ) +
-#     xlab("Year") +
-#     ylab("Life Expectancy")
-# 
-# 
-# p <- data_p +
-#     stat_summary(fun="mean", geom="line", na.rm=TRUE, size=1.25, colour="black") +
-#     stat_summary(fun="mean", geom="point", na.rm=TRUE, size=2.5, colour="black") +
-#     stat_summary(fun="median", geom="line", na.rm=TRUE, size=1.25, colour="red") +
-#     stat_summary(fun="median", geom="point", na.rm=TRUE, size=2.5, colour="red")
-# 
-# ggplotly(p)
-# 
-# 
-# plot_over_time_by_country <- function(data, var="life_expectancy", agg = "mean"){
-#     # check datatype of plotting variable
-#     var_type <- typeof(data[[var]])
-#     stopifnot(
-#         paste0("Plotting variable is required to be numeric. Given input '", var, "' is of type '", var_type, "'."),
-#         var_type != "double"
-#         )
-# 
-#     var_disp <- str_to_title(str_replace(var, "_", " "))
-# 
-#     # Create plot object
-#     p <- ggplot(data = data, aes_string(x="year", y=as.name(var), color="country")) +
-#         geom_line(alpha = 0.3) + 
-#         geom_point(alpha = 0.3) +
-#         scale_colour_manual(values = rep(c("#749AAC"), times = length(unique(data$country)))) +
-#         scale_x_continuous(n.breaks = length(unique(data$year))) +
-#         theme(
-#             legend.position="none",
-#             axis.text.x  = element_text(angle=45)
-#         ) +
-#         xlab("Year") +
-#         ylab(var_disp) +
-#         ggtitle(paste0(var_disp, " Across Time (w/ ", str_to_title(agg), " Trend)")) +
-#         stat_summary(fun=agg, geom="line", na.rm=TRUE, size=1.25, colour="black") +
-#         stat_summary(fun=agg, geom="point", na.rm=TRUE, size=2.5, colour="black")
-# 
-#     # Output to plotly
-#     ggplotly(p)
-# }
-# 
-# plot_over_time_by_country(life, var = "status", agg = "median")
-# 
-# # Define function for getting categories of a column
-# get_categories <- function(data, var="continent"){
-#     cats <- unique(data[[var]])
-#     return(cats)
-# }
-# 
-# cont <- get_categories(life, var="continent")
-# 
-# # Define function for filtering to specific category
-# filter_data <- function(data, var="continent", group="Americas"){
-#     filt_data <- data %>% filter(.data[[var]] == group)
-#     return(filt_data)
-# }
-# 
-# am <- filter_data(life)
-# 
-# life %>% filter(continent == 'Americas')
-# 
-# # Flow: If user wants subset of data (from continent, country or status), have them pick
-# # using available categories (get_categories), then filter data (filter_data) then display
-# 
-# # Get measures that we should use for trending
-# measures <- colnames(life %>% select(-year) %>% select(where(is.numeric)))
-
 library(shiny)
 library(plotly)
 library(readr)
 library(ggplot2)
 library(ggExtra)
 library(tidyverse)
+library(reshape2)
+library(esquisse)
 
 # Create functions
 plot_over_time_by_country <- function(data, var="life_expectancy", agg = "mean"){
@@ -205,6 +89,57 @@ plot_scatter <- function(data, xvar, yvar='life_expectancy'){
     return(p)
 }
 
+reorder_cormat <- function(cormat){
+    # Use correlation between variables as distance
+    dd <- as.dist((1-cormat)/2)
+    hc <- hclust(dd)
+    cormat <-cormat[hc$order, hc$order]
+}
+
+# Get lower triangle of the correlation matrix
+get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+}
+
+# Get upper triangle of the correlation matrix
+get_upper_tri <- function(cormat){
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+}
+
+corr_matrix_heatmap <- function(data, measures){
+    corr_df <- round(cor(data[measures], use="pairwise.complete.obs"), 2)
+
+    # Reorder the correlation matrix
+    corr_df <- reorder_cormat(corr_df)
+    upper_tri <- get_lower_tri(corr_df)
+    
+    # Melt the correlation matrix
+    melted <- melt(upper_tri, na.rm = TRUE)
+
+    p <- ggplot(data = melted, aes(x=Var1, y=Var2, fill=value)) + 
+        geom_tile(color = "white") +
+        scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                             midpoint = 0, limit = c(-1,1), space = "Lab", 
+                             name="Pearson\nCorrelation") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+        coord_fixed() +
+        geom_text(aes(Var1, Var2, label = value), color = "black", size = 2) +
+        theme(
+            axis.title.x = element_blank(),
+            axis.title.y = element_blank(),
+            axis.ticks = element_blank(),
+            legend.justification = c(1, 0),
+            legend.position = c(0.6, 0.7),
+            legend.direction = "horizontal") +
+        guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                                     title.position = "top", title.hjust = 0.5))
+
+    return(p)
+}
+
 # Load data
 life <- read_csv("../datasets/life_expectancy_clean.csv", show_col_types = FALSE)
 
@@ -224,6 +159,10 @@ ui <- fluidPage(
     tabsetPanel(
         tabPanel(
             title="Bivariate Relationships",
+
+            plotlyOutput("cormat"),
+
+            hr(),
             
             # 3 user inputs at the top
             fluidRow(
@@ -288,6 +227,11 @@ ui <- fluidPage(
 # Define server logic
 server <- function(input, output) {
     df <- life  # re-instantiate dataset
+
+    output$cormat <- renderPlotly({
+        # Create heatmap of correlation matrix
+        ggplotly(corr_matrix_heatmap(data=df, measures=measures))
+    })
     
     output$scatter_plot <- renderPlotly({
         # Draw scatter plot
@@ -297,7 +241,7 @@ server <- function(input, output) {
                               )
                  )
     })
-        
+
     observe({
         # If user wants to filter on category, do that here...
         if(input$cat_filter != "none"){
