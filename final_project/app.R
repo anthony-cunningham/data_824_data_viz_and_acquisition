@@ -14,10 +14,8 @@ library(shiny)
 library(plotly)
 library(readr)
 library(ggplot2)
-library(ggExtra)
 library(tidyverse)
 library(reshape2)
-library(esquisse)
 
 # Create functions
 plot_over_time_by_country <- function(data, var="life_expectancy", agg = "mean"){
