@@ -1,0 +1,64 @@
+
+---
+title: "ggplotly geoms"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+#install.packages("plotly")
+#install.packages("flexdashboard")
+library(ggplot2)
+library(plotly)
+library(plyr)
+library(flexdashboard)
+
+# Make some noisily increasing data
+set.seed(955)
+dat <- data.frame(cond = rep(c("A", "B"), each=10),
+                  xvar = 1:20 + rnorm(20,sd=3),
+                  yvar = 1:20 + rnorm(20,sd=3))
+```
+
+geom_point
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Scatter Chart with geom_point
+
+```{r}
+p <- ggplot(dat, aes(x=xvar, y=yvar)) +
+            geom_point(shape=1)      # Use hollow circles
+ggplotly(p)
+```
+
+
+### geom_smooth Linear Regression
+
+```{r}
+p <- ggplot(dat, aes(x=xvar, y=yvar)) +
+            geom_point(shape=1) +    # Use hollow circles
+            geom_smooth(method=lm)   # Add linear regression line
+ggplotly(p)
+```
+
+Row
+-----------------------------------------------------------------------
+
+### geom_smooth with Smoothed Fit
+
+```{r}
+p <- ggplot(dat, aes(x=xvar, y=yvar)) +
+            geom_point(shape=1) +    # Use hollow circles
+            geom_smooth()            # Add a smoothed fit curve with confidence region
+ggplotly(p)
+```
+
+
+
+

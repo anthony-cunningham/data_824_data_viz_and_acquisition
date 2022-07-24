@@ -1,0 +1,24 @@
+---
+title: "Correlation plots"
+output:
+  html_document: default
+---
+Correlation plots 
+========================================================
+
+```{r}
+
+#install.packages("corrplot")
+library(corrplot)
+
+
+data<-read.csv("Histones_modifications.csv")
+M<-cor(data,method="spearman")
+#M<-cor(data,method="pearson")
+#M<-cor(data,method="kendal")
+write.table(M,"Histones_corr.csv",sep="\t")
+corrplot(M,method="circle")
+corrplot(M,method="color")
+corrplot(M,method="number")
+corrplot(M,method="circle",type="upper")
+```

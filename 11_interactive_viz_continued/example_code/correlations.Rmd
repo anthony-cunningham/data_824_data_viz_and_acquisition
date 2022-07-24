@@ -1,0 +1,26 @@
+---
+title: "Correlation plots"
+output:
+  html_document: default
+---
+Correlation plots 
+========================================================
+
+```{r}
+
+#install.packages("corrplot")
+library(corrplot)
+
+data<-read.csv("GEO_subset.csv")
+scaled.dat <- scale(data)
+View(scaled.dat)
+M<-cor(data,method="spearman")
+M<-cor(scaled.dat,method="spearman")
+write.table(M,"GEO_subset_corr.csv",sep="\t")
+corrplot(M,method="circle")
+corrplot(M,method="color")
+corrplot(M,method="number")
+corrplot(M,method="circle",type="upper")
+####################################################
+
+```
