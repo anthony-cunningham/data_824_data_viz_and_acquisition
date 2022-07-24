@@ -1,0 +1,289 @@
+---
+title: "Assignment 3"
+author: "Anthony Cunningham"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Change working dir in RMarkdown cell
+knitr::opts_knit$set(root.dir = 
+'C:/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition/3_univariate_eda'
+)
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+df <- mpg
+```
+
+___
+
+## Exercise 1
+```{r}
+help("mpg")
+```
+
+```{r}
+str(df)
+```
+
+```{r}
+nrow(df)
+ncol(df)
+```
+
+```{r}
+char_cols <- colnames(df[sapply(df, is.character)])
+print("Character variables in mpg dataset: ")
+char_cols
+
+df[sapply(df, is.character)] <- lapply(df[sapply(df, is.character)], as.factor)
+```
+
+```{r}
+summary(df)
+```
+
+```{r}
+df %>% select(cyl) %>% group_by(cyl) %>% summarise(n_cars = n())
+```
+
+`cyl` only takes on 4 distinct values, so it would make more sense as a factor variable.
+
+```{r}
+df <- df %>% mutate(cyl = as.factor(cyl))
+summary(select(df, cyl))
+```
+___
+
+## Exercise 2
+
+```{r}
+df %>% mutate(cty_null = is.na(cty)) %>% group_by(cty_null) %>% summarise(n = n())
+```
+
+No, there are not any missing values in the `cty` variable.
+
+
+```{r}
+df %>% group_by(cty) %>% summarise(n = n()) %>% arrange(desc(n)) %>% head(5)
+
+min_cty <- min(df$cty)
+max_cty <- max(df$cty)
+
+df %>% 
+  ggplot(aes(x = cty)) +
+  geom_dotplot(binwidth = 1, 
+               stackdir = "up", 
+               color = "green", 
+               stackratio = 0.5,
+               dotsize = 1) +
+  scale_x_continuous(breaks = seq(min_cty, max_cty, 1))
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig1.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+The peak of `cty` in terms of frequency is at 18 miles per gallon, followed by 15, 21, 13 and 11 mpg.
+
+```{r}
+(freq_cty <- 18)
+(mean_cty <- mean(df$cty))
+(med_cty <- median(df$cty))
+
+ifelse(
+    (freq_cty - mean_cty) > (freq_cty - med_cty),
+    print("Median value is closer to most frequent value"),
+    print("Mean value is closer to most frequent value")
+    )
+
+df %>%
+    ggplot(aes(x = cty)) +
+    geom_dotplot(binwidth = 1, 
+               stackdir = "up", 
+               color = "green", 
+               stackratio = 0.5,
+               dotsize = 1) +
+    scale_x_continuous(breaks = seq(min_cty, max_cty, 1)) +
+    geom_vline(xintercept = freq_cty, lwd = 1, linetype = "solid", color = "green") +
+    geom_vline(xintercept = mean_cty, lwd = 1, linetype = "dashed", color = "orange") +
+    geom_vline(xintercept = med_cty, lwd = 1, linetype = "twodash", color = "blue")
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig2.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+```{r}
+min_hwy <- min(df$hwy)
+max_hwy <- max(df$hwy)
+
+df %>% 
+  ggplot(aes(x = hwy)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "deepskyblue3") +
+  scale_x_continuous(breaks = seq(min_hwy, max_hwy, 1)) +
+  xlab("Highway Miles per Gallon") +
+  ylab("Frequency") +
+  ggtitle("Distribution of Highway MPG")
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig3.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+
+Yes, there is more than one peak value for vehicles' highway miles per gallon. Peaks are at 17 and 26 highway MPG, respectively, both with over 30 vehicles at that value.
+
+There could be multiple peaks because those could be average values for specific types of vehicles (e.g. trucks/suvs vs compact/midsize vehicles).
+
+```{r}
+mean_hwy <- mean(df$hwy)
+med_hwy <- median(df$hwy)
+
+paste0("Mean Hwy MPG: ", mean_hwy)
+paste0("Median Hwy MPG: ", med_hwy)
+
+df %>% 
+  ggplot(aes(x = hwy)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "deepskyblue3") +
+  scale_x_continuous(breaks = seq(min_hwy, max_hwy, 1)) +
+  xlab("Highway Miles per Gallon") +
+  ylab("Frequency") +
+  ggtitle("Distribution of Highway MPG") +
+  geom_vline(xintercept = mean_hwy, lwd = 1, linetype = "dashed", color = "orange") +
+  geom_vline(xintercept = med_hwy, lwd = 1, linetype = "twodash", color = "blue")
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig4.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+
+Median highway MPG is slightly larger than mean highway MPG, indicating possible large outliers or a slight right tail. However, since the distribution looks to be bimodal, the overall mean and median are not very informative, as there are likely other attributes of vehicles that segments that would be useful to compare.
+
+```{r}
+min_cty <- min(df$cty)
+max_cty <- max(df$cty)
+
+df %>% 
+  ggplot(aes(x = cty)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "chartreuse3") +
+  scale_x_continuous(breaks = seq(min_cty, max_cty, 1)) +
+  xlab("City Miles per Gallon") +
+  ylab("Frequency") +
+  ggtitle("Distribution of City MPG")
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig5.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+
+```{r}
+min_hwy <- min(df$hwy)
+max_hwy <- max(df$hwy)
+
+df %>% 
+  ggplot(aes(x = hwy)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "deepskyblue3") +
+  scale_x_continuous(breaks = seq(min_hwy, max_hwy, 1)) +
+  xlab("Highway Miles per Gallon") +
+  ylab("Frequency") +
+  ggtitle("Distribution of Highway MPG")
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig6.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+```{r}
+df %>%
+    select(cty, hwy) %>%
+    pivot_longer(cols = c(cty, hwy), names_to = "mpg_type", values_to = "mpg") %>%
+    ggplot(aes(x = mpg)) +
+    geom_histogram(binwidth = 1, color = "black", fill = "deepskyblue3") +
+    xlab("Miles per Gallon") +
+    ylab("Frequency") +
+    ggtitle("Distribution of Fuel Efficiency, by Type") +
+    facet_grid(mpg_type ~ .)
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig7.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+```{r}
+df %>% 
+    select(cty, hwy) %>%
+    pivot_longer(cols = c(cty, hwy), names_to = "mpg_type", values_to = "mpg") %>%
+    ggplot(aes(x = mpg, fill = mpg_type)) +
+    geom_area(
+      stat = "density", 
+      kernel = "gaussian", 
+      alpha = 0.3
+      ) +
+    scale_fill_manual(values = c("chartreuse3", "deepskyblue3")) +
+    xlab("Miles per Gallon") +
+    ylab("Density") +
+    ggtitle("Distribution of Fuel Efficiency, by Type")
+```
+
+```{r}
+ggsave(
+    filename = "images/03_assignment_fig8.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+___
+___
+___
