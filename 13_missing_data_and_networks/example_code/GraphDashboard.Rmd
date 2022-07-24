@@ -1,0 +1,43 @@
+---
+title: "Graph Dashboard"
+output: 
+  flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+source("MyGraphCode.R")
+library(DT)
+g <- reactive(MakeMyGraph(input$nNodes))
+```
+
+Input {.sidebar}
+--------------------------------------------------------------------
+
+### Inputs
+
+```{r}
+numericInput("nNodes","How many nodes?",60,1,1000)
+```
+
+Column 
+--------------------------------------------------------------------
+
+### Graph
+
+```{r}
+renderVisNetwork({
+  g() %>% PlotMyGraph()
+})
+```
+
+### Data Table
+```{r}
+renderDataTable({
+  g() %>% 
+    as_long_data_frame() %>% 
+    datatable()
+})
+```
+
