@@ -1,0 +1,29 @@
+k-means analysis on normalized Histone-residue Position Modification
+========================================================
+
+```{r}
+library(stats)
+data<-read.table(file="G:/mihaela/Matrix_forKclusterSpc_0.txt")
+
+
+dim(data)
+head(data)
+km<-kmeans(data,8,iter.max=50000,nstart=10000,algorithm=c("Hartigan-Wong"))
+km
+m2<-cbind(data,km$cluster)
+library(cluster)
+dissE <- daisy(data,metric="euclidean")
+sk<-silhouette(km$cl,dissE)
+plot(sk,col=c("dark blue"))
+dE2 <- dissE^2
+sk2 <- silhouette(km$cl, dE2)
+plot(sk2,col=c("dark blue"))
+
+clusplot(data, km$cluster, color=TRUE, shade=TRUE, 
+         labels=2, lines=0)
+```
+
+
+
+
+

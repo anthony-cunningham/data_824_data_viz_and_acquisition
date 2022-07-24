@@ -1,0 +1,112 @@
+---
+title: "Assignment 15"
+author: "Anthony Cunningham"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Change working dir in RMarkdown cell
+knitr::opts_knit$set(root.dir = 
+'C:/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition'
+)
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+library(datasets)
+library(readxl)
+library(circlize)
+library(FactoMineR)
+library(factoextra)
+library(pheatmap)
+library(cluster)
+library(factoextra)
+```
+
+___
+
+# Exercise 1
+
+```{r}
+dta <- read_excel("datasets/Interaction_proteins.xls", skip=1)
+
+dta_new <- dta %>% mutate(
+    p1 = rowMeans(select(., contains("_P1")))*100,
+    p2 = rowMeans(select(., contains("_P2")))*100,
+    p3 = rowMeans(select(., contains("_P3")))*100,
+    p4 = rowMeans(select(., contains("_P4")))*100
+) %>% select(p1, p2, p3, p4)
+
+rownames(dta_new) <-dta$Proteins
+chordDiagram(as.matrix(dta_new))
+```
+
+This circle diagram visually depicts the average value for 16 proteins (labeled at the bottom-half) across 4 separate replicates. Larger widths indicate higher averages for a particular protein. From the diagram, we notice that the proteins with the highest average values are Rvb1 and Rvb2, followed by Ies5 and Nhp10. On the other hand, proteins Ies3 and Ies6 consistently displayed the smalled average values.
+
+___
+
+# Exercise 2
+
+Examples of Missing Data Structures:
+
+* MCAR: Blood pressure monitor malfunctions at random times, resulting in blood pressure measures not being recorded for some routine patient visits.
+* MAR: An overworked nurse in the emergency department doesn't capture patient weight or blood pressure measurements during very busy periods in order to maximize patient throughput. While missingness of these measures aren't related to the values themselves, they are missing for non-random patients (associated with time and missingness of the other measures that are also not captured).
+* MNAR: An outpatient clinic asks all patients about whether (and to what extent) they use tobacco, marijuana, alcohol and hard drugs. It's plausible that users of substances that are banned or illegal in the clinic's area are more likely to not answer this question than non-users (i.e. response is missing), for fear of disclosure to law enforcement agencies.
+
+___
+
+# Exercise 3
+
+![Venn Diagram](/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition/13_missing_data_and_networks/venn_diagram_exercise_3.png)
+
+___
+
+# Exercise 4
+
+![Network Graph -- Circular Layout](/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition/13_missing_data_and_networks/network_graph.png)
+
+Network Properties:
+
+* Clustering Coefficient = 0.111 -- this indicates a large degree of separation between nodes, on average (i.e. a randomly-selected node is unlikely to have triangular connections)
+* Degree Distribution: This network appears to be a scale-free network, with only a few nodes with many edges; most nodes only have a few edges: ![Degree Distribution](/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition/13_missing_data_and_networks/degree_dist.png)
+* Diameter = 4, which indicates that this network is not very extensive: the maximum number of nodes that the 2 nodes furthest away from each other is is 4. 
+* Avg. Path Length = 2.267, again, indicating a shallow network.
+
+___
+
+# Exercise 5
+
+* Use any data (iris is a good data) to visualize the relationship between variables using 
+PCA, CA, or MCA.
+
+```{r}
+data("iris")
+
+res.PCA <- PCA(iris %>% select(-Species), graph = FALSE)
+fviz_eig(res.PCA)
+fviz_pca_ind(res.PCA, repel = TRUE)
+fviz_pca_biplot(res.PCA, repel = TRUE)
+```
+
+
+* Use any data to visualize variables and observations using heat map and hierarchical 
+clustering method.  You can use the same data that you used when doing clustering in 
+Clustvis. 
+
+```{r}
+wine <- read_csv("datasets/wine-clustering.csv")
+wine_scaled <- scale(wine)
+
+res.hc <- hclust(dist(wine_scaled), method = "ward.D2")
+fviz_dend(res.hc, cex=0.5, k=3, palette="jco")
+pheatmap(t(wine_scaled), cuttree_cols=3)
+```
+
+___
+___
+___
