@@ -1,0 +1,141 @@
+---
+title: "Assignment 5"
+author: "Anthony Cunningham"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Change working dir in RMarkdown cell
+knitr::opts_knit$set(root.dir = 
+'C:/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition/5_multivariate_eda_part_two'
+)
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+df <- mpg
+```
+
+___
+
+# Exercise 1
+
+```{r}
+df[sapply(df, is.character)] <- lapply(df[sapply(df, is.character)], as.factor)
+```
+
+```{r}
+df %>% 
+  ggplot(aes(x = cty, y = hwy, color = displ)) +
+  geom_point(
+     position = "jitter",
+     alpha = 0.5,
+     size = 1.5,
+     stroke = 1.5,
+     ) +
+  scale_color_viridis_c(option = "magma", name = "Engine\nDisplacement") +
+  xlab("City MPG") +
+  ylab("Highway MPG") +
+  ggtitle("Vehicle Miles per Gallon (MPG),\nby Engine Displacement") +
+  theme(
+      axis.text = element_text(size = 16),
+      axis.title = element_text(size = 20),
+      plot.title = element_text(size = 22, face = "bold"),
+      panel.border = element_rect(color = "black", fill = NA, size = 1.5)
+      )
+```
+
+```{r}
+ggsave(
+    filename = "images/05_assignment_fig1.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+```{r}
+df %>% 
+  ggplot(aes(x = cty, y = hwy, size = displ)) +
+  geom_point(
+     color = "black",
+     fill = "white",
+     position = "jitter",
+     alpha = 0.3,
+     ) +
+  scale_size(
+      # trans = "reverse",
+      name = "Engine\nDisplacement"
+      ) +
+  xlab("City MPG") +
+  ylab("Highway MPG") +
+  ggtitle("Vehicle Miles per Gallon (MPG),\nby Engine Displacement") +
+  theme(
+      axis.text = element_text(size = 16),
+      axis.title = element_text(size = 20),
+      plot.title = element_text(size = 22, face = "bold"),
+      panel.border = element_rect(color = "black", fill = NA, size = 1.5)
+      )
+```
+
+```{r}
+ggsave(
+    filename = "images/05_assignment_fig2.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+From the two plots above, I would prefer the first one that encodes engine displacement using color (instead of size). The contrasting color scale provides a much easier layout of observing correlations between engine displacement and fuel efficiency. It becomes much harder to observe in the 2nd plot (using point size to encode different engine displacements), as there is much more overlap and not enough contrast to easily observe the same trends. 
+
+___
+
+# Exercise 2
+
+```{r}
+df %>% 
+  ggplot(aes(x = cty, y = hwy, color = cyl, shape = drv)) +
+  geom_point(
+     position = "jitter",
+     alpha = 0.7,
+     size = 1.25,
+     ) +
+  scale_colour_gradient(
+      low = "dodgerblue",
+      high = "forestgreen",
+      name = "Cylinder Count",
+      ) +
+  scale_shape(name = "Drive Type") +
+  facet_wrap(~fl, scales = "fixed") +
+  xlab("City MPG") +
+  ylab("Highway MPG") +
+  ggtitle("Vehicle Miles per Gallon (MPG),\nby Fuel Type") +
+  theme(
+      axis.text = element_text(size = 8),
+      axis.title = element_text(size = 20),
+      plot.title = element_text(size = 22, face = "bold"),
+      panel.border = element_rect(color = "black", fill = NA, size = 1.5)
+      )
+```
+
+```{r}
+ggsave(
+    filename = "images/05_assignment_fig3.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+From the above figure, I notice that, across the board, high-cylinder vehicles are associated with lower fuel efficiency (regardless of whether on the highway or in the city). I notice that most vehicles have fuel type of "r" or "p", and that type "p" vehicles tend to have worse fuel efficiency, even among their lower-cylinder vehicles. I notice a few vehicles of fuel type "d" that lead the entire pack in fuel efficiency (also, those vehicles all have front-wheel drive and low cylinder counts). I notice that all vehicles with fuel type "e" have very low fuel efficiency (they all also have higher cylinder counts). Lastly, I notice that front-wheel drive vehicles tend to have lower cylinder counts and higher fuel efficiency compared to rear-wheel and 4-wheel drive vehicles.
+
+___
+___
+___
