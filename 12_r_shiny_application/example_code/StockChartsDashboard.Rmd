@@ -1,0 +1,32 @@
+---
+title: "Stock Analysis"
+output: flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+source("TidyQuantPlot.R")
+StockData <- eventReactive(input$update,{getStockData(input$ticker,fromDate = input$dateRange[1],toDate = input$dateRange[2])})
+```
+
+Input {.sidebar}
+-------------------------------------------------------
+
+```{r}
+textInput("ticker","Ticker","AMZN")
+dateRangeInput("dateRange","Date Range",start = today()-90)
+actionButton("update","Update")
+```
+
+Column 
+--------------------------------------------------------
+
+### Chart
+
+```{r}
+renderPlotly({
+  StockData() %>% plotStockData()
+})
+```
+
+
