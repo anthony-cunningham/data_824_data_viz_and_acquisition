@@ -1,0 +1,163 @@
+---
+title: "Assignment 6"
+author: "Anthony Cunningham"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Change working dir in RMarkdown cell
+knitr::opts_knit$set(root.dir = 
+'C:/Users/AC069015/kumc_applied_stats/data_824_data_viz_and_acquisition'
+)
+
+library(cowplot)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggwordcloud)
+library(readr)
+```
+
+___
+
+# Exercise 1
+
+```{r}
+# Load in crypto dataset
+coin <- read_table2("datasets/coin_prices_2017.txt")
+
+# Clean columns
+colnames(coin) <- tolower(colnames(coin))
+coin[sapply(coin, is.character)] <- lapply(coin[sapply(coin, is.character)], as.factor)
+
+# Filter to bitcoin closing prices
+bit <- coin %>%
+    filter(coin_abr == "BTC") %>%
+    select(c(date, close))
+```
+
+```{r}
+ts <- bit %>% 
+  ggplot(aes(x = date, y = close)) +
+  geom_line(size = 1.2) +
+  xlab("Date") +
+  ylab("Closing Trade Price ($)") +
+  ggtitle("Bitcoin Trading Price across time") +
+  theme(
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 14),
+      plot.title = element_text(size = 18, face = "bold"),
+      panel.border = element_rect(color = "black", fill = NA, size = 1)
+      )
+```
+
+```{r}
+# calculate differences between two successive months 
+bit <- bit %>% 
+  mutate(close_lag = lag(close, 1),
+         close_diff = close - close_lag,
+         diff_type = case_when(
+             close_diff > 0 ~ "increase",
+             close_diff < 0 ~ "decrease",
+             close_diff == 0 ~ "no change"
+             )
+         ) %>% 
+  filter(!is.na(close_lag)) # remove first month
+```
+
+```{r}
+wf <- bit %>% 
+  ggplot(aes(x = date, fill = diff_type)) +
+  geom_rect(
+      aes(
+          xmin = date - 15, xmax = date + 15, 
+          ymin = close_lag, ymax = close
+          )
+      ) +
+  # scale_x_date(date_breaks = "1 Month", date_labels = "%Y-m") +
+  scale_fill_manual(values = c("brown1", "limegreen", "gray")) +
+  xlab("Date") +
+  ylab("Closing Trading Price ($)") +
+  ggtitle("Bitcoin Trading Price across time") +
+  theme(
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 14),
+      plot.title = element_text(size = 18, face = "bold"),
+      legend.position = "none",
+      panel.border = element_rect(color = "black", fill = NA, size = 1)
+      )
+```
+
+```{r}
+plot_grid(ts, wf, nrow = 2, align = "h")
+```
+
+```{r}
+ggsave(
+    filename = "6_multivariate_visualisation/images/06_assignment_fig1.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+___
+
+# Exercise 2
+
+```{r}
+infected <- read_csv("datasets/time_series-ncov-Confirmed.csv")
+
+infected <- infected[-1,]
+
+infected <- infected %>% 
+  mutate(lat = as.numeric(Lat),
+         long = as.numeric(Long),
+         date = as.Date(Date),
+         value = as.numeric(Value)) %>% 
+  rename(n_infected = value) %>% 
+  arrange(`Country/Region`, date)
+```
+
+```{r}
+max_date <- infected %>%
+    group_by(`Province/State`, `Country/Region`) %>%
+    summarise(date = max(date))
+
+infected_ld <- inner_join(infected, max_date, by = c("Province/State", "Country/Region", "date"))
+
+infected_ld <- infected_ld %>%
+    filter(n_infected > 0)
+
+infected_ld_agg <- infected_ld %>%
+    group_by(`Country/Region`) %>%
+    summarise(n_infected = sum(n_infected))
+```
+
+```{r}
+set.seed(12)
+
+infected_ld_agg %>% 
+  ggplot(aes(label = `Country/Region`, size = n_infected, color = `Country/Region`)) +
+  geom_text_wordcloud(area_corr_power = 1) +
+  scale_size_area(max_size = 20) +
+  scale_color_viridis_d(option = "magma") +
+  theme_minimal()
+```
+
+```{r}
+ggsave(
+    filename = "6_multivariate_visualisation/images/06_assignment_fig2.png",
+    units = "cm",
+    width = 29.7,
+    height = 21,
+    dpi = 600
+    )
+```
+
+___
+___
+___
